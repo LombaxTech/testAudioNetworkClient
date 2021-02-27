@@ -6,6 +6,8 @@ import Room from "./Room";
 const BACKEND_API = process.env.REACT_APP_BASE_API || "http://localhost:8000";
 
 export default function VideoChat() {
+    console.log(process.env.REACT_APP_BASE_API);
+
     const [username, setUsername] = useState("");
     const [roomName, setRoomName] = useState("");
     const [room, setRoom] = useState(null);
@@ -19,14 +21,17 @@ export default function VideoChat() {
         // console.log({ username, roomName });
 
         try {
-            let data = await fetch(`${BACKEND_API}/video/token`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    identity: username,
-                    room: roomName,
-                }),
-            });
+            let data = await fetch(
+                `https://audio-test-network.herokuapp.com/video/token`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        identity: username,
+                        room: roomName,
+                    }),
+                }
+            );
             data = await data.json();
             let { token } = data;
 
