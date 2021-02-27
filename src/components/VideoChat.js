@@ -3,6 +3,8 @@ import Video from "twilio-video";
 import Lobby from "./Lobby";
 import Room from "./Room";
 
+const BACKEND_API = process.env.REACT_APP_BASE_API || "http://localhost:8000";
+
 export default function VideoChat() {
     const [username, setUsername] = useState("");
     const [roomName, setRoomName] = useState("");
@@ -17,7 +19,7 @@ export default function VideoChat() {
         // console.log({ username, roomName });
 
         try {
-            let data = await fetch(`http://localhost:8000/video/token`, {
+            let data = await fetch(`${BACKEND_API}/video/token`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
