@@ -19,8 +19,8 @@ export default function VideoChat() {
 
         try {
             let data = await fetch(
-                // `https://audio-test-network.herokuapp.com/video/token`,
-                `http://localhost:8000/video/token`,
+                `https://audio-test-network.herokuapp.com/video/token`,
+                // `http://localhost:8000/video/token`,
 
                 {
                     method: "POST",
