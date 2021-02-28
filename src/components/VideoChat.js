@@ -51,8 +51,8 @@ export default function VideoChat() {
     const createRoom = async (roomName, username) => {
         try {
             let data = await fetch(
-                // `https://audio-test-network.herokuapp.com/room`,
-                `http://localhost:8000/room`,
+                `https://audio-test-network.herokuapp.com/room`,
+                // `http://localhost:8000/room`,
 
                 {
                     method: "POST",
