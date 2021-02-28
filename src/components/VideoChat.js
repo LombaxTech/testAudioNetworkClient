@@ -9,33 +9,71 @@ export default function VideoChat() {
     console.log(process.env.REACT_APP_BASE_API);
 
     const [username, setUsername] = useState("");
-    const [roomName, setRoomName] = useState("");
     const [room, setRoom] = useState(null);
     const [connecting, setConnecting] = useState(false);
 
     const handleUsernameChange = (e) => setUsername(e.target.value);
-    const handleRoomNameChange = (e) => setRoomName(e.target.value);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // console.log({ username, roomName });
+    const joinRoom = async (roomName, username) => {
+        // return console.log({ username, roomName });
 
         try {
             let data = await fetch(
-                `https://audio-test-network.herokuapp.com/video/token`,
+                // `https://audio-test-network.herokuapp.com/video/token`,
+                `http://localhost:8000/video/token`,
+
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         identity: username,
-                        room: roomName,
+                        roomName,
                     }),
                 }
             );
             data = await data.json();
+            if (data === 20404) {
+                return console.log("Room does not exist.");
+            }
+            // return console.log(data);
             let { token } = data;
+            let room = await Video.connect(token, {
+                name: roomName,
+                audio: true,
+            });
+            console.log(room);
+            setRoom(room);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-            let room = await Video.connect(token, { name: roomName });
+    const createRoom = async (roomName, username) => {
+        try {
+            let data = await fetch(
+                // `https://audio-test-network.herokuapp.com/room`,
+                `http://localhost:8000/room`,
+
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        identity: username,
+                        roomName,
+                    }),
+                }
+            );
+            data = await data.json();
+            if (data === 53113) {
+                return console.log("Room already exists. Change Room name");
+            }
+            // return console.log(data);
+            let { token } = data;
+            // return console.log(token);
+            let room = await Video.connect(token, {
+                name: roomName,
+                audio: true,
+            });
             console.log(room);
             setRoom(room);
         } catch (error) {
@@ -75,17 +113,14 @@ export default function VideoChat() {
     }, [room, handleLogout]);
 
     if (room) {
-        return (
-            <Room roomName={roomName} room={room} handleLogout={handleLogout} />
-        );
+        return <Room room={room} handleLogout={handleLogout} />;
     } else {
         return (
             <Lobby
                 username={username}
                 handleUsernameChange={handleUsernameChange}
-                roomName={roomName}
-                handleRoomNameChange={handleRoomNameChange}
-                handleSubmit={handleSubmit}
+                joinRoom={joinRoom}
+                createRoom={createRoom}
             />
         );
     }

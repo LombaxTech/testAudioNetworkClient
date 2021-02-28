@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-export default function Participant({ participant, me }) {
+export default function Participant({ participant, me, profilePictureId }) {
     const [videoTracks, setVideoTracks] = useState([]);
     const [audioTracks, setAudioTracks] = useState([]);
 
@@ -67,9 +67,28 @@ export default function Participant({ participant, me }) {
     }, [audioTracks]);
 
     return (
-        <div className="participant">
+        <div
+            className="participant"
+            style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+            }}
+        >
+            {/* <video ref={videoRef} autoPlay={true} /> */}
+            <img
+                src={
+                    profilePictureId ||
+                    "https://t4.ftcdn.net/jpg/01/18/03/35/360_F_118033506_uMrhnrjBWBxVE9sYGTgBht8S5liVnIeY.jpg"
+                }
+                style={{
+                    background: "green",
+                    maxWidth: "150px",
+                    maxHeight: "150px",
+                }}
+            />
             <h2>{participant.identity}</h2>
-            <video ref={videoRef} autoPlay={true} />
             <audio ref={audioRef} autoPlay={true} muted={me} />
         </div>
     );

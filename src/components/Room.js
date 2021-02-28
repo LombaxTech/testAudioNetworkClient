@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Participant from "./Participant";
 
-export default function Room({ roomName, room, handleLogout }) {
+export default function Room({ room, handleLogout }) {
+    console.log(room);
+
     const [participants, setParticipants] = useState([]);
 
     useEffect(() => {
         const participantConnected = (participant) => {
-            console.log(`${participant.identity} has joined`);
+            // console.log(`${participant.identity} has joined`);
             setParticipants((prevParticipants) => [
                 ...prevParticipants,
                 participant,
@@ -20,8 +22,10 @@ export default function Room({ roomName, room, handleLogout }) {
             );
         };
 
+        // room.on("roomCreated", () => console.log("ROOM HAS BEEN CREATED"));
         room.on("participantConnected", participantConnected);
         room.on("participantDisconnected", participantDisconnected);
+
         room.participants.forEach(participantConnected);
         return () => {
             room.off("participantConnected", participantConnected);
@@ -45,8 +49,11 @@ export default function Room({ roomName, room, handleLogout }) {
 
     return (
         <div>
-            <h2>Room: {roomName}</h2>
+            <h2>Room: {room.name}</h2>
             <button onClick={handleLogout}>Leave Room</button>
+            {/* <button onClick={() => console.log(room.participants.size)}>
+                size
+            </button> */}
 
             <div className="local-participant">
                 <Participant
