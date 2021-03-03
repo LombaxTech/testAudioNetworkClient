@@ -1,6 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 
-export default function Participant({ participant, me, profilePictureId }) {
+export default function Participant({
+    participant,
+    me,
+    profilePictureId,
+    id,
+    socket,
+}) {
+    const [user, setUser] = useState({});
+
+    async function getUser() {
+        try {
+            let user = await fetch(
+                `http://localhost:8000/user/${participant.identity}`
+            );
+            user = await user.json();
+            setUser(user);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        getUser();
+    }, []);
+
     const [videoTracks, setVideoTracks] = useState([]);
     const [audioTracks, setAudioTracks] = useState([]);
 
@@ -77,18 +101,22 @@ export default function Participant({ participant, me, profilePictureId }) {
             }}
         >
             {/* <video ref={videoRef} autoPlay={true} /> */}
-            <img
-                src={
-                    profilePictureId ||
-                    "https://t4.ftcdn.net/jpg/01/18/03/35/360_F_118033506_uMrhnrjBWBxVE9sYGTgBht8S5liVnIeY.jpg"
-                }
-                style={{
-                    background: "green",
-                    maxWidth: "150px",
-                    maxHeight: "150px",
-                }}
-            />
-            <h2>{participant.identity}</h2>
+            {!user.imageUrl && (
+                <img
+                    src={
+                        profilePictureId ||
+                        "https://t4.ftcdn.net/jpg/01/18/03/35/360_F_118033506_uMrhnrjBWBxVE9sYGTgBht8S5liVnIeY.jpg"
+                    }
+                    style={{
+                        background: "green",
+                        maxWidth: "150px",
+                        maxHeight: "150px",
+                    }}
+                />
+            )}
+            {/* <h2>{participant.identity}</h2> */}
+            <h1> {user.name}</h1>
+            <img src={user.imageUrl} alt="" />
             <audio ref={audioRef} autoPlay={true} muted={me} />
         </div>
     );

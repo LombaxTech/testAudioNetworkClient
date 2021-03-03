@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import io from "socket.io-client";
 import Video from "twilio-video";
 import Lobby from "./Lobby";
 import Room from "./Room";
@@ -6,11 +7,17 @@ import Room from "./Room";
 const BACKEND_API = process.env.REACT_APP_BASE_API || "http://localhost:8000";
 
 export default function VideoChat() {
-    console.log(process.env.REACT_APP_BASE_API);
+    const socket = useRef();
+
+    const [myId, setMyId] = useState("");
+
+    useEffect(() => {
+        socket.current = io.connect("/");
+        socket.current.on("setId", (id) => setMyId(id));
+    }, []);
 
     const [username, setUsername] = useState("");
     const [room, setRoom] = useState(null);
-    const [connecting, setConnecting] = useState(false);
 
     const handleUsernameChange = (e) => setUsername(e.target.value);
 
@@ -19,19 +26,20 @@ export default function VideoChat() {
 
         try {
             let data = await fetch(
-                `https://audio-test-network.herokuapp.com/video/token`,
-                // `http://localhost:8000/video/token`,
+                // `https://audio-test-network.herokuapp.com/video/token`,
+                `http://localhost:8000/video/token`,
 
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        identity: username,
+                        identity: myId,
                         roomName,
                     }),
                 }
             );
             data = await data.json();
+            console.log(data);
             if (data === 20404) {
                 return console.log("Room does not exist.");
             }
@@ -51,14 +59,14 @@ export default function VideoChat() {
     const createRoom = async (roomName, username) => {
         try {
             let data = await fetch(
-                `https://audio-test-network.herokuapp.com/room`,
-                // `http://localhost:8000/room`,
+                // `https://audio-test-network.herokuapp.com/room`,
+                `http://localhost:8000/room`,
 
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        identity: username,
+                        identity: myId,
                         roomName,
                     }),
                 }
@@ -93,6 +101,10 @@ export default function VideoChat() {
         });
     }, []);
 
+    const setName = (name) => socket.current.emit("setName", name);
+
+    const setImage = (url) => socket.current.emit("setImage", url);
+
     useEffect(() => {
         if (room) {
             const tidyUp = (event) => {
@@ -113,7 +125,14 @@ export default function VideoChat() {
     }, [room, handleLogout]);
 
     if (room) {
-        return <Room room={room} handleLogout={handleLogout} />;
+        return (
+            <Room
+                room={room}
+                handleLogout={handleLogout}
+                socket={socket}
+                myId={myId}
+            />
+        );
     } else {
         return (
             <Lobby
@@ -121,6 +140,9 @@ export default function VideoChat() {
                 handleUsernameChange={handleUsernameChange}
                 joinRoom={joinRoom}
                 createRoom={createRoom}
+                myId={myId}
+                setName={setName}
+                setImage={setImage}
             />
         );
     }

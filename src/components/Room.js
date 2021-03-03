@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Participant from "./Participant";
 
-export default function Room({ room, handleLogout }) {
+export default function Room({ room, handleLogout, socket, myId }) {
     console.log(room);
 
     const [participants, setParticipants] = useState([]);
@@ -38,6 +38,7 @@ export default function Room({ room, handleLogout }) {
             key={participant.sid}
             participant={participant}
             me={false}
+            socket={socket}
         />
     ));
 
@@ -54,19 +55,33 @@ export default function Room({ room, handleLogout }) {
             {/* <button onClick={() => console.log(room.participants.size)}>
                 size
             </button> */}
+            <button onClick={() => console.log(room.localParticipant)}>
+                Local Participant
+            </button>
 
             <div className="local-participant">
                 <Participant
                     key={room.localParticipant.sid}
                     participant={room.localParticipant}
                     me={true}
+                    socket={socket}
+                    myId={myId}
                 />
                 <button onClick={mute}>Mute</button>
             </div>
+
             <div className="remote-participants">
                 <h3>Other users</h3>
                 {remoteParticipants}
             </div>
+
+            <button onClick={() => socket.current.emit("canSend")}>
+                Send sockets
+            </button>
+
+            <button onClick={() => console.log(participants)}>
+                View participants
+            </button>
         </div>
     );
 }
