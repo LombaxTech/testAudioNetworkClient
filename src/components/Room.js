@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import Participant from "./Participant";
+import { RoomContext, MyIdContext } from "../RoomContext";
 
-export default function Room({ room, handleLogout, socket, myId }) {
+export default function Room() {
     console.log(room);
+
+    const [room, setRoom] = useContext(RoomContext);
+    const [myId, setMyId] = useContext(MyIdContext);
 
     const [participants, setParticipants] = useState([]);
 
@@ -38,7 +42,6 @@ export default function Room({ room, handleLogout, socket, myId }) {
             key={participant.sid}
             participant={participant}
             me={false}
-            socket={socket}
         />
     ));
 
@@ -48,13 +51,40 @@ export default function Room({ room, handleLogout, socket, myId }) {
         });
     };
 
+    const handleLogout = useCallback(() => {
+        setRoom((prevRoom) => {
+            if (prevRoom) {
+                prevRoom.localParticipant.tracks.forEach((trackPub) => {
+                    trackPub.track.stop();
+                });
+                prevRoom.disconnect();
+            }
+            return null;
+        });
+    }, []);
+    useEffect(() => {
+        if (room) {
+            const tidyUp = (event) => {
+                if (event.persisted) {
+                    return;
+                }
+                if (room) {
+                    handleLogout();
+                }
+            };
+            window.addEventListener("pagehide", tidyUp);
+            window.addEventListener("beforeunload", tidyUp);
+            return () => {
+                window.removeEventListener("pagehide", tidyUp);
+                window.removeEventListener("beforeunload", tidyUp);
+            };
+        }
+    }, [room, handleLogout]);
+
     return (
         <div>
             <h2>Room: {room.name}</h2>
             <button onClick={handleLogout}>Leave Room</button>
-            {/* <button onClick={() => console.log(room.participants.size)}>
-                size
-            </button> */}
             <button onClick={() => console.log(room.localParticipant)}>
                 Local Participant
             </button>
@@ -64,7 +94,6 @@ export default function Room({ room, handleLogout, socket, myId }) {
                     key={room.localParticipant.sid}
                     participant={room.localParticipant}
                     me={true}
-                    socket={socket}
                     myId={myId}
                 />
                 <button onClick={mute}>Mute</button>
@@ -74,10 +103,6 @@ export default function Room({ room, handleLogout, socket, myId }) {
                 <h3>Other users</h3>
                 {remoteParticipants}
             </div>
-
-            <button onClick={() => socket.current.emit("canSend")}>
-                Send sockets
-            </button>
 
             <button onClick={() => console.log(participants)}>
                 View participants

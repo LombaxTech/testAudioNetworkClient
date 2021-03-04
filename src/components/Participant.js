@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-export default function Participant({
-    participant,
-    me,
-    profilePictureId,
-    id,
-    socket,
-}) {
+export default function Participant({ participant, me, profilePictureId }) {
     const [user, setUser] = useState({});
 
     async function getUser() {

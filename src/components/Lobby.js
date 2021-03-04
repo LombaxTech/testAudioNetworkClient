@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import CurrentRooms from "./CurrentRooms";
+import { RoomContext, MyIdContext } from "../RoomContext";
+import Video from "twilio-video";
 
-const SetName = ({ username, handleUsernameChange, setName, setImage }) => {
+const SetName = ({ setName, setImage }) => {
     const [imageUrl, setImageUrl] = useState("");
+    const [username, setUsername] = useState("");
 
     return (
         <div className="set-name">
-            <h2>Your username is {username}</h2>
-            <label>Name: </label>
+            <h2>Your username is: {username}</h2>
+            <label>Name</label>
             <input
                 type="text"
                 value={username}
-                onChange={handleUsernameChange}
+                onChange={(e) => setUsername(e.target.value)}
             />
             <button onClick={() => setName(username)}>Set Name</button>
 
@@ -26,9 +29,40 @@ const SetName = ({ username, handleUsernameChange, setName, setImage }) => {
     );
 };
 
-const CreateRoom = ({ createRoom, username }) => {
+const CreateRoom = () => {
+    const [room, setRoom] = useContext(RoomContext);
+    const [myId, setMyId] = useContext(MyIdContext);
+
     const [roomName, setRoomName] = useState("");
-    const handleRoomNameChange = (e) => setRoomName(e.target.value);
+
+    const createRoom = async (roomName) => {
+        try {
+            let data = await fetch(
+                // `https://audio-test-network.herokuapp.com/room`,
+                `http://localhost:8000/room`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        identity: myId,
+                        roomName,
+                    }),
+                }
+            );
+            data = await data.json();
+            if (data === 53113) {
+                return console.log("Room already exists. Change Room name");
+            }
+            let { token } = data;
+            let room = await Video.connect(token, {
+                name: roomName,
+                audio: true,
+            });
+            setRoom(room);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <div className="create-room">
@@ -37,20 +71,50 @@ const CreateRoom = ({ createRoom, username }) => {
             <input
                 type="text"
                 value={roomName}
-                onChange={handleRoomNameChange}
+                onChange={(e) => setRoomName(e.target.value)}
             />
 
-            <button onClick={() => createRoom(roomName, username)}>
-                Join Room
-            </button>
+            <button onClick={() => createRoom(roomName)}>Join Room</button>
         </div>
     );
 };
 
-const JoinRoom = ({ joinRoom, username }) => {
+const JoinRoom = () => {
+    const [myId, setMyId] = useContext(MyIdContext);
+    const [room, setRoom] = useContext(RoomContext);
     const [roomName, setRoomName] = useState("");
 
-    const handleRoomNameChange = (e) => setRoomName(e.target.value);
+    const joinRoom = async () => {
+        // return console.log({ username, roomName });
+        try {
+            let data = await fetch(
+                // `https://audio-test-network.herokuapp.com/video/token`,
+                `http://localhost:8000/video/token`,
+
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        identity: myId,
+                        roomName,
+                    }),
+                }
+            );
+            data = await data.json();
+            console.log(data);
+            if (data === 20404) {
+                return console.log("Room does not exist.");
+            }
+            let { token } = data;
+            let room = await Video.connect(token, {
+                name: roomName,
+                audio: true,
+            });
+            setRoom(room);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <div className="join-room">
@@ -59,37 +123,23 @@ const JoinRoom = ({ joinRoom, username }) => {
             <input
                 type="text"
                 value={roomName}
-                onChange={handleRoomNameChange}
+                onChange={(e) => setRoomName(e.target.value)}
             />
-
-            <button onClick={() => joinRoom(roomName, username)}>
-                Join Room
-            </button>
+            <button onClick={joinRoom}>Join Room</button>
         </div>
     );
 };
 
-export default function Lobby({
-    username,
-    handleUsernameChange,
-    joinRoom,
-    createRoom,
-    myId,
-    setName,
-    setImage,
-}) {
+export default function Lobby({ setName, setImage }) {
+    const [myId, setMyId] = useContext(MyIdContext);
+
     return (
         <div className="lobby">
-            <SetName
-                username={username}
-                handleUsernameChange={handleUsernameChange}
-                setName={setName}
-                setImage={setImage}
-            />
-            <JoinRoom joinRoom={joinRoom} username={username} />
-            <CreateRoom createRoom={createRoom} username={username} />
+            <SetName setName={setName} setImage={setImage} />
+            <JoinRoom />
+            <CreateRoom />
+            <CurrentRooms />
 
-            <CurrentRooms joinRoom={joinRoom} username={username} />
             <button onClick={() => console.log(`My id is ${myId}`)}>
                 View Id
             </button>
